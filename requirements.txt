@@ -5,3 +5,8 @@ Pillow
 requests
 newspaper3k
 textblob
+lxml[html_clean]
+beautifulsoup4
+html5lib
+setuptools
+wheel
