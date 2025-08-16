@@ -1,0 +1,7 @@
+streamlit
+python-dotenv
+openai
+Pillow
+requests
+newspaper3k
+textblob
