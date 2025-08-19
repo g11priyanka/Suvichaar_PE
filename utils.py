@@ -209,7 +209,7 @@ Whether it is war or weather, science or society, Polaris delivers every story w
     headline = response.choices[0].message.content.strip()
     return headline
     
-def web_story(titles, headline, category, subcategory, emotion, article_text, num_slides=12, character_sketch=None):
+def web_story(titles, headline, category, subcategory, emotion, article_text, num_slides=13, character_sketch=None):
     if not character_sketch:
         character_sketch = """
 Polaris is the North Star — a fixed, timeless observer in the sky who now serves as a global newsreader. 
@@ -345,7 +345,7 @@ Return only the JSON as specified. No commentary.
 
 
 
-def generate_story(place: str, num_day=5):
+def generate_story(place: str, num_day=13):
     character_sketch = """
     Chirai is a small, curious, and emotionally observant sparrow who has traveled across cities, villages, temples, rooftops, railway stations, and narrow streets. 
     She is not a tour guide — she is a companion who tells stories like an old friend, with warmth and insight.
@@ -528,7 +528,7 @@ Topic 2: <Title>
 
 
 
-def owl_response(question: str, language: str, num_slides: int = 11):
+def owl_response(question: str, language: str, num_slides: int = 2):
     character_sketch = """
     You are an Owl named Hoot — a wise, ancient, nocturnal teacher who has observed centuries of human thought, philosophy, and learning from your perch in quiet forests, old libraries, and temple rooftops.
     You speak slowly and clearly, using poetic, reflective language — always calm, always thoughtful.
@@ -669,9 +669,9 @@ Topic 2: <Title>
     # Fixed slide10 content
     fixed_slide10 = {
         "s10paragraph1": "ऐसी प्रेरणादायक बातों के लिए ",
-        "s10paragraph2": "लाइक करें, शेयर करें और सब्सक्राइब करें www.suvichaar.org",
         "s10audio1": "https://cdn.suvichaar.org/media/tts_d32ab179d01e46a09a264abfaf4950a9.mp3",
-        "s10video1": ""
+        "s10video1": "",
+        "s10paragraph2": "लाइक करें, शेयर करें और सब्सक्राइब करें www.suvichaar.org"
     }
 
     total_slides = len(matches)
@@ -700,7 +700,7 @@ Topic 2: <Title>
 
 
 
-def generate_podcast_script(topic, guest_name, character_sketch, language, numSlides: int = 12):
+def generate_podcast_script(topic, guest_name, character_sketch, language, numSlides: int = 2):
     system_prompt = f"""
 You are a creative podcast scriptwriter for a show called "The Penguin Show".
 The host is Pengu, an extroverted, humorous, and nature-loving emperor penguin.
@@ -785,7 +785,6 @@ Do NOT add anything before or after the slides.
     return slides
 
 
-
 def hoot_explainer(input: str, num_subtopics: int, language: str):
     character_sketch = """
 Hoot is a non-human teacher — think structured like a blackboard, wise like an old owl, and clear like a morning lecture. 
@@ -810,7 +809,7 @@ Instructions:
 - Maintain a structured tone: build each section from basic to more developed ideas.
 - Use calm, student-friendly language. Explain concepts step by step.
 - Occasionally include a short clarifying comment or light metaphor if it helps comprehension — but keep things grounded and clear.
-- End with a conclusion summarizing the idea, in Hoot’s thoughtful voice.
+- Do NOT write a conclusion at the end.
 
 Format exactly like this:
 
@@ -821,9 +820,6 @@ Subtopic 2: <Title>
 <Explanation>
 
 ...
-
-Conclusion:
-<Final summary that wraps up the topic in a clear and encouraging tone>
 """
 
     response = client.chat.completions.create(
@@ -836,18 +832,49 @@ Conclusion:
 
     raw_text = response.choices[0].message.content.strip()
 
-    # Extract the subtopics using regex
-    pattern = r"Subtopic\s+\d+:\s*(.*?)\n(.*?)(?=(?:Subtopic\s+\d+:|Conclusion:|\Z))"
+    # Extract subtopics
+    pattern = r"Subtopic\s+\d+:\s*(.*?)\n(.*?)(?=Subtopic\s+\d+:|\Z)"
     matches = re.findall(pattern, raw_text, re.DOTALL)
 
-    slides = [{"title": title.strip(), "content": content.strip()} for title, content in matches]
+    # Convert into dict format
+    slides_dict = {}
+    for idx, (title, explanation) in enumerate(matches, start=1):
+        slides_dict[f"slide{idx}"] = {
+            f"s{idx}paragraph1": explanation.strip(),
+            f"s{idx}audio1": "",
+            f"s{idx}image1": "",
+            f"s{idx}paragraph2": title.strip()
+        }
 
-    # Get conclusion separately
-    conclusion_match = re.search(r"Conclusion:\s*(.*)", raw_text, re.DOTALL)
-    conclusion = conclusion_match.group(1).strip() if conclusion_match else ""
-
-    return {
-        "input": input,
-        "subtopics": slides,
-        "conclusion": conclusion
+    # Fixed slide10 content (same style as spiritual)
+    fixed_slide10 = {
+        "s10paragraph1": "ऐसी प्रेरणादायक बातों के लिए ",
+        "s10audio1": "https://cdn.suvichaar.org/media/tts_d32ab179d01e46a09a264abfaf4950a9.mp3",
+        "s10video1": "",
+        "s10paragraph2": "लाइक करें, शेयर करें और सब्सक्राइब करें www.suvichaar.org"
     }
+
+    total_slides = len(matches)
+
+    # Reorder like spiritual()
+    if total_slides > 9:
+        reordered = {}
+        # Slides 1–9
+        for n in range(1, 10):
+            key = f"slide{n}"
+            if key in slides_dict:
+                reordered[key] = slides_dict[key]
+        # Slides 11 onwards
+        for n in range(11, total_slides + 1):
+            key = f"slide{n}"
+            if key in slides_dict:
+                reordered[key] = slides_dict[key]
+        # Slide 10 last
+        reordered["slide10"] = fixed_slide10
+        slides_dict = reordered
+    else:
+        # Append slide10 at end if ≤ 9 slides
+        slides_dict["slide10"] = fixed_slide10
+
+    return slides_dict
+

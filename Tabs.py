@@ -4,7 +4,7 @@ import requests
 from PIL import Image
 import json
 from dotenv import load_dotenv
-
+import boto3
 import streamlit as st
 import json
 from utils import (
@@ -40,6 +40,21 @@ from CS import (
     Sal_CS,
     Zuzu_CS,
     Luma_CS
+)
+
+from h import generate_s3_links,merge_image_links_into_slides
+
+# ========== Define S3 client globally ==========
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_KEY")
+AWS_REGION = os.getenv("AWS_REGION")
+BUCKET_NAME = os.getenv("AWS_BUCKET")
+
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    region_name=AWS_REGION
 )
 
 if os.getenv("STREAMLIT_RUNTIME") is None:
@@ -112,7 +127,7 @@ with tabs[0]:
                     "slides": output.get("slides", {})
                 }
                 st.success("✅ Prompt generation complete!")
-                st.json(final_output)
+                #st.json(final_output)
 
                 # Prepare image prompt list excluding fixed slide10
                 image_prompt_list = []
@@ -139,6 +154,19 @@ with tabs[0]:
 
                 # Image generation via Azure
                 polaris_image_paths = generate_and_save_images_azure(prompts, client)
+                 
+               ##########################
+                image_links = generate_s3_links(polaris_image_paths, BUCKET_NAME, s3_client)
+
+                # FIX: only pass slides
+                slides = final_output["slides"]
+                slides = merge_image_links_into_slides(slides, image_links)
+                final_output["slides"] = slides
+
+                st.success("✅ Combined story + images")
+                st.json(final_output)
+                ##########################
+
 
                 # Display images
                 for idx, path in enumerate(polaris_image_paths, start=1):
@@ -163,8 +191,10 @@ with tabs[0]:
 with tabs[1]:
     st.title("Chirai generates your itinerary")
     st.image("chirai.png",width=300)
+
     with st.expander("About Chirai"):
         st.markdown(Chirai_CS)
+
     place = st.text_input("Enter a place", key="place_input")
     persona_itinerary = st.selectbox(
         "Choose audience persona:",
@@ -176,9 +206,8 @@ with tabs[1]:
         with st.spinner("Generating itinerary..."):
             try:
                 full_slides = generate_story(place)
-
                 st.success("✅ Prompt generation complete!")
-                st.json(full_slides)
+                #st.json(full_slides)
 
                 # Convert slides (except slide10) into list of dicts with 'title' and 'story'
                 image_prompt_list = []
@@ -195,12 +224,20 @@ with tabs[1]:
                 st.json(itinerary_prompts)
 
                 image_paths = generate_and_save_images_azure(itinerary_prompts, client)
+                
+                ##########################
+                image_links = generate_s3_links(image_paths,BUCKET_NAME,s3_client)
+
+                full_slides = merge_image_links_into_slides(full_slides, image_links)
+
+                st.success("✅ Combined story + images")
+                st.json(full_slides)
+                ############################
 
                 for idx, path in enumerate(image_paths):
                     st.image(path, caption=f"Slide {idx+1}", width=300)
 
                 zip_buffer, zip_filename = zip_images_in_memory(image_paths)
-
                 st.download_button(
                     label="📥 Download All Images",
                     data=zip_buffer,
@@ -229,11 +266,11 @@ with tabs[2]:
     if topic and persona_story:
         with st.spinner("Generating story..."):
             try:
-                full_story = pragnan_story(topic, 12, language)
+                full_story = pragnan_story(topic, 13, language)
 
                 # Directly show the slide-based story JSON
                 st.success("✅ Prompt generation complete!")
-                st.json(full_story)
+                #st.json(full_story)
 
                 # Convert slides (except slide10) into list of dicts with 'title' and 'story' for image prompts
                 image_prompt_list = []
@@ -251,6 +288,15 @@ with tabs[2]:
 
                 # Generate and save images
                 p_image_paths = generate_and_save_images_azure(pragnan_prompts, client)
+
+                ##########################
+                image_links = generate_s3_links(p_image_paths,BUCKET_NAME,s3_client)
+
+                full_story = merge_image_links_into_slides(full_story, image_links)
+
+                st.success("✅ Combined story + images")
+                st.json(full_story)
+                ############################
 
                 # Show images in Streamlit
                 for idx, path in enumerate(p_image_paths):
@@ -287,11 +333,11 @@ with tabs[3]:
         with st.spinner("Generating story..."):
             try:
                 # Generate structured slide dictionary with fixed slide10
-                full_t = spiritual(topic_t, 10, language)
+                full_t = spiritual(topic_t, 2, language)
 
                 # Show the slide-based story JSON
                 st.success("✅ Prompt generation complete!")
-                st.json(full_t)
+                #st.json(full_t)
 
                 # Prepare image prompt list (skip fixed slide10)
                 image_prompt_list = []
@@ -310,6 +356,16 @@ with tabs[3]:
 
                 # Generate images
                 image_paths = generate_and_save_images_azure(nirvana_prompts, client)
+
+                ##########################
+                image_links = generate_s3_links(image_paths,BUCKET_NAME,s3_client)
+
+                full_t = merge_image_links_into_slides(full_t, image_links)
+
+                st.success("✅ Combined story + images")
+                st.json(full_t)
+                ############################
+                
 
                 # Show images
                 for idx, path in enumerate(image_paths):
@@ -349,7 +405,7 @@ with tabs[4]:
 
                 # Show the full structured story JSON
                 st.success("✅ Prompt generation complete!")
-                st.json(full_ans)
+                #st.json(full_ans)
 
                 # Prepare prompt list for image generation (skip fixed slide10)
                 image_prompt_list = []
@@ -368,6 +424,15 @@ with tabs[4]:
 
                 # Generate and save images
                 image_paths = generate_and_save_images_azure(owl_prompts, client)
+
+                 ##########################
+                image_links = generate_s3_links(image_paths,BUCKET_NAME,s3_client)
+
+                full_ans = merge_image_links_into_slides(full_ans, image_links)
+
+                st.success("✅ Combined story + images")
+                st.json(full_ans)
+                ############################
 
                 # Display generated images
                 for idx, path in enumerate(image_paths):
@@ -450,7 +515,7 @@ with tabs[5]:
 
                 # Show structured JSON output
                 st.success("✅ Podcast script generation complete!")
-                st.json(podcast_script)
+                #st.json(podcast_script)
 
                 # Prepare image prompts list (skip slide10 and keep same order)
                 image_prompt_list = []
@@ -485,6 +550,14 @@ with tabs[5]:
 
                 # Generate images via Azure
                 image_paths = generate_and_save_images_azure(podcast_image_prompts, client)
+                ##########################
+                image_links = generate_s3_links(image_paths,BUCKET_NAME,s3_client)
+
+                podcast_script = merge_image_links_into_slides(podcast_script, image_links)
+
+                st.success("✅ Combined story + images")
+                st.json(podcast_script)
+                ############################
 
                 # Display images with captions
                 for idx, path in enumerate(image_paths, start=1):
@@ -502,44 +575,16 @@ with tabs[5]:
             except Exception as e:
                 st.error(f"❌ Error: {str(e)}")
 
-
-data_list = [
-    {
-        "title": "Early European Presence and British Dominance",
-        "content": "By the late 17th century, European traders had established outposts in India. The East India Company gradually expanded its influence, eventually leading to British dominance by the 18th century."
-    },
-    {
-        "title": "The Indian Rebellion of 1857 and Formation of National Movements",
-        "content": "The Indian Rebellion of 1857 marked a turning point, prompting the British Crown to take direct control over India. This era saw the birth of civic movements and the establishment of the Indian National Congress in 1885."
-    },
-    {
-        "title": "Rise of Self-Rule Movements",
-        "content": "After World War I, India witnessed political reforms and increasing demands for self-rule. Mahatma Gandhi's leadership of the non-cooperation and civil disobedience movements significantly strengthened the push for independence."
-    },
-    {
-        "title": "Political Developments in the 1930s and 1940s",
-        "content": "During the 1930s and 1940s, legislative reforms were introduced, the Congress achieved electoral successes, and Muslim nationalism grew. These developments paved the way for India's eventual independence."
-    },
-    {
-        "title": "Independence and Partition",
-        "content": "On 15 August 1947, India achieved independence, accompanied by widespread celebrations. However, the partition of India and Pakistan brought large-scale communal violence and displacement."
-    },
-    {
-        "title": "Independence Day Celebrations",
-        "content": "Independence Day is marked annually with flag hoisting, parades, fireworks, and patriotic songs, commemorating the nation's struggle for freedom and its aspirations for the future."
-    }
-]
-
 with tabs[6]:
     st.title("🦉 Hoot Explains")
     st.image("owl.png", width=300)
 
     with st.expander("About Hoot"):
-        st.markdown(Owl_CS)  # or rename to Hoot_CS if you've defined it that way
+        st.markdown(Owl_CS)  # or Hoot_CS if renamed
 
     # User inputs
     explain = st.text_input("Enter your question/topic", key="hoot")
-    num_subtopics = st.slider("How many subtopics should Hoot use?", min_value=2, max_value=8, value=4)
+    num_subtopics = st.text_input("Enter number of slides", key="numSlides")
 
     persona_explain = st.selectbox(
         "Choose audience persona:",
@@ -549,44 +594,53 @@ with tabs[6]:
 
     language = st.selectbox("Choose language", ["English"], key="hoot_language")
 
-
-
     # Trigger generation
-    if explain and persona_explain:
+    if explain and persona_explain and num_subtopics:
         with st.spinner("Hoot is thinking..."):
             try:
                 # 1. Generate explanation from Hoot
-                hoot_output = hoot_explainer(explain, num_subtopics, language)
-                subtopics = hoot_output["subtopics"]
-                conclusion = hoot_output["conclusion"]
-
-                final_output = {
-                    "Input": explain,
-                    "Subtopics": subtopics,
-                    "Conclusion": conclusion
-                }
+                full_explain = hoot_explainer(explain, num_subtopics, language)
 
                 st.success("✅ Explanation generated!")
-                st.json(final_output)
+                st.json(full_explain)
 
-                # 2. Generate image prompts
+                # 2. Prepare prompt list for image generation
+
+                image_prompt_list = []
+                for slide_key, slide_content in full_explain.items():
+                    # extract number part: slide1 -> 1, slide10 -> 10
+                    n = ''.join(ch for ch in slide_key if ch.isdigit())
+                    
+                    explanation = slide_content.get(f"s{n}paragraph1", "")
+                    title = slide_content.get(f"s{n}paragraph2", "").lstrip("- ").strip()
+                    
+                    image_prompt_list.append({"title": title, "content": explanation})
+
+                # 3. Generate image prompts
                 hoot_prompts = generate_scientific_image_prompts(
                     CharacterSketch=Owl_CS,
-                    data_list=data_list,
+                    data_list=image_prompt_list,
                     art_style="scientific vector-style flat illustration"
                 )
-
                 st.success("🖼️ Image prompts generated!")
                 st.json(hoot_prompts)
 
-                # 3. Generate images using Azure OpenAI
+                # 4. Generate images using Azure OpenAI
                 image_paths = generate_and_save_images_azure(hoot_prompts, client)
+                ##########################
+                image_links = generate_s3_links(image_paths,BUCKET_NAME,s3_client)
 
-                # 4. Display images with captions
+                full_explain = merge_image_links_into_slides(full_explain, image_links)
+
+                st.success("✅ Combined story + images")
+                st.json(full_explain)
+                ############################
+
+                # 5. Display images with captions
                 for idx, path in enumerate(image_paths):
-                    st.image(path, caption=f"Slide {idx + 1}: {subtopics[idx]['title']}", width=300)
+                    st.image(path, caption=f"Slide {idx + 1}", width=300)
 
-                # 5. Zip and allow download
+                # 6. Zip and allow download
                 zip_buffer, zip_filename = zip_images_in_memory(image_paths)
 
                 st.download_button(
@@ -598,5 +652,3 @@ with tabs[6]:
 
             except Exception as e:
                 st.error(f"❌ Error: {str(e)}")
-
-

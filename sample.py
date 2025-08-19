@@ -172,32 +172,6 @@ def zip_images_in_memory(image_files):
     zip_buffer.seek(0)  # Important: move cursor to start for download
     return zip_buffer, zip_name
 
-data_list = [
-    {
-        "title": "Early European Presence and British Dominance",
-        "content": "By the late 17th century, European traders had established outposts in India. The East India Company gradually expanded its influence, eventually leading to British dominance by the 18th century."
-    },
-    {
-        "title": "The Indian Rebellion of 1857 and Formation of National Movements",
-        "content": "The Indian Rebellion of 1857 marked a turning point, prompting the British Crown to take direct control over India. This era saw the birth of civic movements and the establishment of the Indian National Congress in 1885."
-    },
-    {
-        "title": "Rise of Self-Rule Movements",
-        "content": "After World War I, India witnessed political reforms and increasing demands for self-rule. Mahatma Gandhi's leadership of the non-cooperation and civil disobedience movements significantly strengthened the push for independence."
-    },
-    {
-        "title": "Political Developments in the 1930s and 1940s",
-        "content": "During the 1930s and 1940s, legislative reforms were introduced, the Congress achieved electoral successes, and Muslim nationalism grew. These developments paved the way for India's eventual independence."
-    },
-    {
-        "title": "Independence and Partition",
-        "content": "On 15 August 1947, India achieved independence, accompanied by widespread celebrations. However, the partition of India and Pakistan brought large-scale communal violence and displacement."
-    },
-    {
-        "title": "Independence Day Celebrations",
-        "content": "Independence Day is marked annually with flag hoisting, parades, fireworks, and patriotic songs, commemorating the nation's struggle for freedom and its aspirations for the future."
-    }
-] 
 
 def generate_scientific_image_prompts(CharacterSketch, data_list, art_style="clean vector-style educational diagram"):
     prompts = []
