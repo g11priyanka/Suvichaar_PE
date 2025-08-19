@@ -2,6 +2,7 @@ import boto3
 import os
 import streamlit as st
 from sample import generate_and_save_images_azure
+from typing import Dict, List
 # ========== Define S3 client globally ==========
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_KEY")
@@ -80,7 +81,7 @@ image_prompts = [
 #print(image_urls)
 
 # merge_utils.py
-from typing import Dict, List
+
 
 def merge_image_links_into_slides(slides: Dict[str, dict], image_links: List[str]) -> Dict[str, dict]:
     """
