@@ -27,6 +27,7 @@ client = AzureOpenAI(
 
 def generate_image_prompts_one_by_one(slides, art_style="vector-style flat illustration"):
     prompts = []
+    slides.pop();
     for slide in slides:
         title = slide["title"]
         story = slide["story"]
@@ -73,7 +74,6 @@ def generate_image_prompts(CharacterSketch,data_list, art_style="vector-style fl
         List of DALL·E-style image prompts.
     """
     prompts = []
-
     for item in data_list:
         title = item["title"]
         story = item["story"]

@@ -37,7 +37,7 @@ def get_sentiment(text):
     else:
         return "neutral"
 
-def extract_subtopics(text, num_slides=5):
+def extract_subtopics(text, num_slides):
     system_prompt = f"""
 You are a web story editor for a digital news platform.
 
@@ -209,7 +209,7 @@ Whether it is war or weather, science or society, Polaris delivers every story w
     headline = response.choices[0].message.content.strip()
     return headline
     
-def web_story(titles, headline, category, subcategory, emotion, article_text, num_slides=13, character_sketch=None):
+def web_story(titles, headline, category, subcategory, emotion, article_text, num_slides, character_sketch=None):
     if not character_sketch:
         character_sketch = """
 Polaris is the North Star — a fixed, timeless observer in the sky who now serves as a global newsreader. 
@@ -345,7 +345,7 @@ Return only the JSON as specified. No commentary.
 
 
 
-def generate_story(place: str, num_day=13):
+def generate_story(place: str, num_day):
     character_sketch = """
     Chirai is a small, curious, and emotionally observant sparrow who has traveled across cities, villages, temples, rooftops, railway stations, and narrow streets. 
     She is not a tour guide — she is a companion who tells stories like an old friend, with warmth and insight.
@@ -528,7 +528,7 @@ Topic 2: <Title>
 
 
 
-def owl_response(question: str, language: str, num_slides: int = 2):
+def owl_response(question: str, language: str, num_slides):
     character_sketch = """
     You are an Owl named Hoot — a wise, ancient, nocturnal teacher who has observed centuries of human thought, philosophy, and learning from your perch in quiet forests, old libraries, and temple rooftops.
     You speak slowly and clearly, using poetic, reflective language — always calm, always thoughtful.
@@ -700,7 +700,7 @@ Topic 2: <Title>
 
 
 
-def generate_podcast_script(topic, guest_name, character_sketch, language, numSlides: int = 2):
+def generate_podcast_script(topic, guest_name, character_sketch, language, numSlides):
     system_prompt = f"""
 You are a creative podcast scriptwriter for a show called "The Penguin Show".
 The host is Pengu, an extroverted, humorous, and nature-loving emperor penguin.

@@ -88,13 +88,19 @@ with tabs[0]:
     with st.expander("About Polaris"):
         st.markdown(Polaris_CS)
     url = st.text_input("Enter a news article URL", key="url_input")
+    num_slides = st.text_input("Enter number of slides and press enter", key="polris_slides")
+    if num_slides.isdigit():
+        num_slides = int(num_slides)
+    else:
+        num_slides = 5  # default fallback
+
     persona_polaris = st.selectbox(
         "Choose audience persona:",
         ["genz", "millenial", "working professionals", "creative thinkers", "spiritual explorers"],
         key="persona_polaris"
     )
 
-    if url and persona_polaris:
+    if url and persona_polaris and num_slides:
         with st.spinner("Analyzing the article and generating ..."):
             try:
                 # Extract article details
@@ -105,7 +111,7 @@ with tabs[0]:
                 subcategory = result["subcategory"]
                 emotion = result["emotion"]
                 headline = head(url)
-                titles = extract_subtopics(full_text, num_slides=5)
+                titles = extract_subtopics(full_text, num_slides)
 
                 # Generate structured web story
                 output = web_story(
@@ -114,7 +120,8 @@ with tabs[0]:
                     category=category,
                     subcategory=subcategory,
                     emotion=emotion,
-                    article_text=full_text
+                    article_text=full_text,
+                    num_slides=num_slides
                 )
 
                 final_output = {
@@ -127,7 +134,7 @@ with tabs[0]:
                     "slides": output.get("slides", {})
                 }
                 st.success("✅ Prompt generation complete!")
-                #st.json(final_output)
+                st.json(final_output)
 
                 # Prepare image prompt list excluding fixed slide10
                 image_prompt_list = []
@@ -196,16 +203,22 @@ with tabs[1]:
         st.markdown(Chirai_CS)
 
     place = st.text_input("Enter a place", key="place_input")
+    num_chirai_slides = st.text_input("Enter number of slides and press enter",key="chirai_slides")
+    if num_chirai_slides.isdigit():
+        num_chirai_slides = int(num_chirai_slides)
+    else:
+        num_chirai_slides = 5  # default fallback
+
     persona_itinerary = st.selectbox(
         "Choose audience persona:",
         ["genz", "millenial", "working professionals", "creative thinkers", "spiritual explorers"],
         key="persona_itinerary"
     )
 
-    if place and persona_itinerary:
+    if place and persona_itinerary and num_chirai_slides:
         with st.spinner("Generating itinerary..."):
             try:
-                full_slides = generate_story(place)
+                full_slides = generate_story(place,num_chirai_slides)
                 st.success("✅ Prompt generation complete!")
                 #st.json(full_slides)
 
@@ -256,6 +269,7 @@ with tabs[2]:
     with st.expander("About Pragnan"):
         st.markdown(Pragnan_CS)
     topic = st.text_input("Enter a topic", key="topic_pragnan")
+    num_pragnan_slides = st.text_input("Enter number of slides",key="pragnan_slides")
     persona_story = st.selectbox(
         "Choose audience persona:",
         ["genz", "millenial", "working professionals", "creative thinkers", "spiritual explorers"],
@@ -263,10 +277,10 @@ with tabs[2]:
     )
     language = "Hindi (use English letters only, no Devanagari script)"
 
-    if topic and persona_story:
+    if topic and persona_story and num_pragnan_slides:
         with st.spinner("Generating story..."):
             try:
-                full_story = pragnan_story(topic, 13, language)
+                full_story = pragnan_story(topic, num_pragnan_slides, language)
 
                 # Directly show the slide-based story JSON
                 st.success("✅ Prompt generation complete!")
@@ -323,17 +337,18 @@ with tabs[3]:
     with st.expander("About Nirvana"):
         st.markdown(Nirvana_CS)
     topic_t = st.text_input("Enter your topic", key="nirvana_topic")
+    num_nirvana_slides=st.text_input("Enter number of slides",key = "nirvana_slides")
     persona_t = st.selectbox(
         "Choose audience persona:",
         ["genz", "millenial", "working professionals", "creative thinkers", "spiritual explorers"],
         key="nirvana_persona"
     )
 
-    if topic_t and persona_t:
+    if topic_t and persona_t and num_nirvana_slides:
         with st.spinner("Generating story..."):
             try:
                 # Generate structured slide dictionary with fixed slide10
-                full_t = spiritual(topic_t, 2, language)
+                full_t = spiritual(topic_t, num_nirvana_slides, language)
 
                 # Show the slide-based story JSON
                 st.success("✅ Prompt generation complete!")
@@ -392,16 +407,17 @@ with tabs[4]:
     with st.expander("About Hoot"):
         st.markdown(Owl_CS)
     question = st.text_input("Enter your question/topic", key="hoot_input")
+    num_owl_slides=st.text_input("Enter number of slides",key="owl_slides")
     persona_question = st.selectbox(
         "Choose audience persona:",
         ["genz", "millenial", "working professionals", "creative thinkers", "spiritual explorers"],
         key="hoot_persona"
     )
 
-    if question and persona_question:
+    if question and persona_question and num_owl_slides:
         with st.spinner("Generating answer..."):
             try:
-                full_ans = owl_response(question, language)
+                full_ans = owl_response(question, language,num_owl_slides)
 
                 # Show the full structured story JSON
                 st.success("✅ Prompt generation complete!")
@@ -486,13 +502,14 @@ with tabs[5]:
 
 
     podcast_topic = st.text_input("Enter your topic for podcast", key="podcast_topic")
+    num_podcast_slides = st.text_input("Enter number of slides",key="podcast_slide")
     guest = st.selectbox(
         "Choose your guest",
         ["Tika", "Rolo", "Sal", "Zuzu", "Luma"],
         key="podcast_guest"
     )
 
-    if podcast_topic and guest:
+    if podcast_topic and guest and num_podcast_slides:
         with st.spinner("Generating podcast script..."):
             try:
                 # Guest character mapping
@@ -510,7 +527,8 @@ with tabs[5]:
                     podcast_topic,
                     guest,
                     guest_character_sketch,
-                    language
+                    language,
+                    num_podcast_slides
                 )
 
                 # Show structured JSON output
